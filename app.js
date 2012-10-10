@@ -103,7 +103,7 @@ app.get('/', function(req, res){
 
 // thing page - returns last seen ip address
 app.get('/:id', [validateKey, redisId], function(req, res){
-  db.hget(req.redis_id, 'wireline_ip', function(err, result) {
+  db.hget(req.redis_id, 'private_ip', function(err, result) {
     if (err) {
       res.send(500, err);
     } else {
