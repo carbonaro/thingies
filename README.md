@@ -33,3 +33,8 @@ You can put that in a cron or use the thingup.sh script. First argument is the U
 thing. Second argument is the key.
 
     script/thingup.sh http://example.com/my_raspberry_by 5eec8e1caba298af9cb3ba60cf956c4f98ea2d1f
+
+## Install
+
+Though ruby is not required to run the thingies server, Capistrano recipes are provided 
+for an easy forever-based deploy.
