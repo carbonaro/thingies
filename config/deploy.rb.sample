@@ -1,0 +1,68 @@
+require 'bundler/capistrano'
+
+set :application, "thingies"
+set :deploy_to, "/var/node/#{application}"
+
+## SCM config
+set :repository, "https://github.com/carbonaro/thingies.git"
+set :scm, "git"
+
+set :user, "node"
+set :use_sudo, false
+
+#servers = %w(example.com)
+role :app, *servers
+role :web, *servers
+role :db,  servers.first, :primary => true
+
+# Node JS
+set :node_version, "0.8.11"
+set :node_env, "production"
+set :node_path, "/home/node/nvm/v#{node_version}/bin"
+set :npm_bin , "#{node_path}/npm"
+set :node_bin, "#{node_path}/node"
+set :forever_bin, "NODE_ENV=#{node_env} #{node_bin} #{shared_path}/node_modules/.bin/forever"
+
+after "deploy:update_code", :link_node_modules
+after "deploy:setup", :create_shared_dirs
+
+namespace :deploy do
+  desc "Restarting the Node.js process"
+  task :restart, :roles => :app, :except => { :no_release => true } do
+    stop
+    sleep(2)
+    start
+  end
+
+  desc "Starting the Node.js process"
+  task :start, :roles => :app do
+    run "#{forever_bin} start -a -m 5 -l #{shared_path}/log/forever.log -o #{shared_path}/log/forever.log -e #{shared_path}/log/forever.error.log --pidFile #{shared_path}/pids/node.pid --sourceDir #{current_path} app.js"
+  end
+
+  desc "Stopping the app Node.js process"
+  task :stop, :roles => :app, :on_error => :continue do
+    run "#{forever_bin} stop app.js"
+  end  
+  
+  desc "Show node JS version"
+  task :version, :roles => :app do
+    run "#{node_bin} -v"
+  end 
+  
+  desc "Show Node Forever List"
+  task :forever_list, :roles => :app do
+    run "#{forever_bin} list"
+  end
+end
+
+task :link_node_modules do
+  run "ln -s #{shared_path}/node_modules #{release_path}/node_modules"
+end
+
+task :npm_install do
+  run "cd #{current_path} && #{npm_bin} install -d && #{npm_bin} update && #{npm_bin} list"
+end
+
+task :create_shared_dirs, :on_error => :continue do
+  run "mkdir #{shared_path}/node_modules"
+end
