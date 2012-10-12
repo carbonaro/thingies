@@ -101,8 +101,22 @@ app.get('/', function(req, res){
   res.send('hello world');
 });
 
+app.get('/:id', redisId, function(req, res) {
+  db.hget(req.redis_id, 'private_ip', function(err, result) {
+    if (err) {
+      res.send(500, err);
+    } else {
+      if (/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/.test(result)) {
+        res.redirect(302, req.protocol + '://' + result + req.path);
+      } else {
+        res.send(404);
+      }
+    }
+  });
+});
+
 // thing page - returns last seen ip address
-app.get('/:id', [validateKey, redisId], function(req, res){
+app.get('/:id/private_ip', [validateKey, redisId], function(req, res){
   db.hget(req.redis_id, 'private_ip', function(err, result) {
     if (err) {
       res.send(500, err);
