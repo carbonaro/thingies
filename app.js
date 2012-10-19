@@ -107,7 +107,7 @@ app.get('/:id', redisId, function(req, res) {
       res.send(500, err);
     } else {
       if (/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/.test(result)) {
-        res.redirect(302, req.protocol + '://' + result + req.path);
+        res.redirect(302, req.protocol + '://' + result);
       } else {
         res.send(404);
       }
