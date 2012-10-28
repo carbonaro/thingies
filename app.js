@@ -102,12 +102,15 @@ app.get('/', function(req, res){
 });
 
 app.get('/:id', redisId, function(req, res) {
+  var redirect_port = req.query.redirect_port;
   db.hget(req.redis_id, 'private_ip', function(err, result) {
     if (err) {
       res.send(500, err);
     } else {
       if (/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/.test(result)) {
-        res.redirect(302, req.protocol + '://' + result);
+        var redirect_uri = req.protocol + '://' + result;
+        if ('undefined' != typeof(redirect_port)) redirect_uri = redirect_uri + ":" + redirect_port;
+        res.redirect(302, redirect_uri);
       } else {
         res.send(404);
       }
