@@ -27,11 +27,12 @@ var app = express();
 //
 app.configure(function(){
   app.set('title', 'thingies - simple device manager');
+  app.set('views', __dirname + '/views');
+  app.set('view engine', 'jade');
+  app.use(express.logger());
+  app.use(express.bodyParser());
+  app.use(express.static(__dirname + '/public'));
 })
-
-app.use(express.logger());
-app.use(express.bodyParser());
-app.use(express.static(__dirname + '/public'));
 
 // Models
 //
@@ -98,7 +99,23 @@ function redisId(req, res, next) {
 
 // home
 app.get('/', function(req, res){
-  res.send('hello world');
+  db.hgetall("authorized_keys", function(err, keys) {
+    var id = "";
+    var ids = [];
+    var multi = db.multi();
+    if (err || keys.length == 0) res.send("No things found");
+    for (var k in keys) {
+      ids.push(keys[k]);
+      id = createHash(keys[k]);
+      multi.hgetall("thing:" + id);
+    }
+    multi.exec(function(err, replies) {
+      for (var i=0 ; i < replies.length ; i++) {
+        replies[i]['id'] = ids[i];
+      }
+      res.render('home', {things: replies});
+    });
+  });
 });
 
 app.get('/:id', redisId, function(req, res) {
